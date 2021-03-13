@@ -28,11 +28,33 @@ module.exports = {
         } catch (error) { console.log(error); }
     },
 
-    balanceNFT: async function (_tokenId, _owner) {
+    setApproval: async function (_operator, _approved, _sendSettings) {
+        try {
+            const approve = await nftTokenContract.methods.setApprovalForAll(_operator, _approved).send(_sendSettings);
+            return approve;
+        } catch (error) { console.log(error); }
+    },
+
+    getApproval: async function (_owner, _operator) {
+        try {
+            const isApproved = await nftTokenContract.methods.isApprovedForAll(_owner, _operator).call();
+            return isApproved;
+        } catch (error) { console.log(error); }
+    },
+
+    getNFTBalance: async function (_tokenId, _owner) {
         try {
             const balance = await nftTokenContract.methods.balanceOfBatch(_owner, _tokenId).call();
             return balance;
         } catch (error) { console.log(error); }
+    },
+
+    getEthBalance: async function(_accountAddress) {
+        
+        try{
+            const balance = await web3.eth.getBalance(_accountAddress);         
+            return balance / 1000000000000000000;
+        } catch(error) {console.log(error);}
     },
 
     startNewAuction: async function(_tokenId, _duration, sendSettings) {
@@ -42,10 +64,10 @@ module.exports = {
         } catch (error) { console.log(error); }
     },
 
-    bitForNFT: async function(_tokenId, _bit, sendSettings) {
+    bidForNFT: async function(_tokenId, _bid, sendSettings) {
         try {
-            const bit = await nftAuctionContract.methods.bit(_tokenId, _bit).send(sendSettings);
-            return bit;
+            const bid = await nftAuctionContract.methods.bid(_tokenId, _bid).send(sendSettings);
+            return bid;
         } catch (error) { console.log(error); }
     },
 
@@ -74,6 +96,13 @@ module.exports = {
         try {
             const tokenAmount = await nftAuctionContract.methods.getTokenAmount(_tokenId).call();
             return tokenAmount;
+        } catch (error) { console.log(error); }
+    },
+
+    getCreatorAddress: async function(_tokenId) {
+        try {
+            const creator = await nftAuctionContract.methods.getCreator(_tokenId).call();
+            return creator;
         } catch (error) { console.log(error); }
     }
 }

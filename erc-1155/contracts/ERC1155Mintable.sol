@@ -33,7 +33,7 @@ contract ERC1155Mintable is ERC1155 {
     }
 
     // Creates a new token type and assings _initialSupply to minter
-    function create(uint256 _initialSupply, string calldata _uri) external returns(uint256 _id) {
+    function create(uint256 _initialSupply, string memory _uri) public returns(uint256 _id) {
 
         _id = ++nonce;
         creators[_id] = msg.sender;

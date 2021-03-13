@@ -1,28 +1,28 @@
 pragma solidity 0.5.0;
 
 import "../erc-1155/contracts/IERC1155.sol";
-import "../erc-1155/contracts/ERC1155Mintable.sol";
+import "./NFTToken.sol";
 
 
-contract MyNFTAuction is ERC1155Mintable {
+contract MyNFTAuction is NFTToken {
 
     struct Auction {
         bool hasStarted;
-        uint ending;
-        uint highestBit;
-        address highestBitter;
-        address payable auctionOwner;
+        uint256 ending;
+        uint256 highestBid;
+        address highestBidder;
+        address payable creator;
     }
     
-    mapping(uint => Auction) auctionList;
-    mapping(uint => uint) tokenAmountTracking;
-    uint[] tokenList;
+    mapping(uint256 => Auction) auctionList;
+    mapping(uint256 => uint256) tokenAmountTracking;
+    uint256[] tokenList;
     IERC1155 private token;
     address public owner;
     
-    constructor(address _token) public {
-        require(_token != address(0));
-        token = IERC1155(_token);
+    constructor(IERC1155 _token) public {
+        require(address(this) != address(0));
+        token = _token;
         owner = msg.sender;
     }
 
@@ -36,31 +36,33 @@ contract MyNFTAuction is ERC1155Mintable {
         return bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"));
     }
 
-    function startAuction(uint _tokenId, uint _duration) public {
-        require(msg.sender == creators[_tokenId], "Only creator can start the Auction");
+    function startAuction(uint256 _tokenId, uint256 _duration) public {
+        //require(msg.sender == creators[_tokenId], "Only creator can start the Auction");
         require(auctionList[_tokenId].hasStarted == false, "Auction already started");
         
         auctionList[_tokenId].hasStarted = true;
-        auctionList[_tokenId].ending = now + _duration;
-        auctionList[_tokenId].auctionOwner = msg.sender;
+        auctionList[_tokenId].ending = now + _duration * 1 seconds;
+        auctionList[_tokenId].creator = msg.sender;
     }
     
-    function bit(uint _tokenId, uint _bit) public {
+    function bid(uint256 _tokenId, uint256 _bid) public {
         require(auctionList[_tokenId].hasStarted == true, "Auction has not started yet");
-        require(_bit >= auctionList[_tokenId].highestBit, "You need to make an higher offer");
+        require(_bid >= auctionList[_tokenId].highestBid, "You need to make an higher offer");
         require(now < auctionList[_tokenId].ending, "Auction already finished");
      
-        auctionList[_tokenId].highestBit = _bit;
-        auctionList[_tokenId].highestBitter = msg.sender;
+        auctionList[_tokenId].highestBid = _bid;
+        auctionList[_tokenId].highestBidder = msg.sender;
     }
     
-    function sellItem(uint _tokenId) public payable {
-        require(msg.sender == auctionList[_tokenId].highestBitter, "You did not won the auction");
-        require(msg.value == auctionList[_tokenId].highestBit, "Please send the correct bitting amount");
+    function sellItem(uint256 _tokenId) public payable {
+        require(msg.sender == auctionList[_tokenId].highestBidder, "You did not won the auction");
+        require(msg.value == auctionList[_tokenId].highestBid, "Please send the correct bidding amount");
+        require(now > auctionList[_tokenId].ending, "Auction not finished yet");
         
+        uint256 tokenSendingAmount = tokenAmountTracking[_tokenId]; 
         tokenAmountTracking[_tokenId] -= 1;
-        token.safeTransferFrom(address(this), msg.sender, _tokenId, 1, "");
-        auctionList[_tokenId].auctionOwner.transfer(msg.value * 9 / 10);
+        token.safeTransferFrom(address(this), msg.sender, _tokenId, tokenSendingAmount, "");
+        auctionList[_tokenId].creator.transfer(msg.value);
     }
     
     function withdraw() public {
@@ -75,11 +77,15 @@ contract MyNFTAuction is ERC1155Mintable {
 
 //--------------------Some Getter Functions----------------------------------------------------------------
 
-    function getTokenList() public returns(uint[] memory) {
+    function getTokenList() public returns(uint256[] memory) {
         return tokenList;
     }
 
-    function getTokenAmount(uint _tokenId) public returns(uint) {
+    function getTokenAmount(uint256 _tokenId) public returns(uint256) {
         return tokenAmountTracking[_tokenId];
+    }
+
+    function getCreator(uint256 _tokenId) public returns(address) {
+        return creators[_tokenId];
     }
 }
