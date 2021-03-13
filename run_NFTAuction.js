@@ -77,7 +77,6 @@ async function main() {
     let sell = await SCInteraction.sellNFT(tokenIdList[0], bidderPay);
 
     logBalances("After Sending", tokenIdList[0]);
-
 }
 
 main();

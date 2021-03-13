@@ -8,4 +8,9 @@ contract NFTToken is IERC1155, ERC1155Mintable {
     constructor() public {
 
     }
+
+    function getCreator(uint256 _tokenId) public returns(address) {
+        return creators[_tokenId];
+    }
+
 }

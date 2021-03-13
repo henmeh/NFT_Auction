@@ -1,10 +1,10 @@
 pragma solidity 0.5.0;
 
 import "../erc-1155/contracts/IERC1155.sol";
-import "./NFTToken.sol";
+import "./INFTToken.sol";
 
 
-contract MyNFTAuction is NFTToken {
+contract MyNFTAuction {
 
     struct Auction {
         bool hasStarted;
@@ -18,11 +18,13 @@ contract MyNFTAuction is NFTToken {
     mapping(uint256 => uint256) tokenAmountTracking;
     uint256[] tokenList;
     IERC1155 private token;
+    INFTToken private nft;
     address public owner;
     
-    constructor(IERC1155 _token) public {
+    constructor(address _token) public {
         require(address(this) != address(0));
-        token = _token;
+        token = IERC1155(_token);
+        nft = INFTToken(_token);
         owner = msg.sender;
     }
 
@@ -37,7 +39,7 @@ contract MyNFTAuction is NFTToken {
     }
 
     function startAuction(uint256 _tokenId, uint256 _duration) public {
-        //require(msg.sender == creators[_tokenId], "Only creator can start the Auction");
+        require(msg.sender == nft.getCreator(_tokenId), "Only creator can start the Auction");
         require(auctionList[_tokenId].hasStarted == false, "Auction already started");
         
         auctionList[_tokenId].hasStarted = true;
@@ -86,6 +88,6 @@ contract MyNFTAuction is NFTToken {
     }
 
     function getCreator(uint256 _tokenId) public returns(address) {
-        return creators[_tokenId];
+        return nft.getCreator(_tokenId);
     }
 }
